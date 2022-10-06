@@ -1,0 +1,7 @@
+name: aws-lunches
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - terraform
+  - ansible
