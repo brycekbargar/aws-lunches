@@ -7,4 +7,12 @@ terraform {
   }
 }
 
-provider "aws" {}
+provider "aws" {
+  default_tags {
+    tags = {
+      terraform = "true"
+      source    = "aws-lunches"
+      chapter   = "one"
+    }
+  }
+}
