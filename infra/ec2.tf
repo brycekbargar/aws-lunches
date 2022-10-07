@@ -24,14 +24,58 @@ output "web_private_key" {
   sensitive = true
 }
 
+resource "random_pet" "web_key_name" {
+  keepers = {
+    key_value = tls_private_key.web_key.public_key_fingerprint_md5
+  }
+}
+
 resource "aws_key_pair" "web_key" {
-  key_name   = "web_key"
+  key_name   = random_pet.web_key_name.id
   public_key = tls_private_key.web_key.public_key_openssh
 }
 
-resource "aws_instance" "web" {
+resource "aws_security_group" "hello_world_web" {
+}
+
+resource "aws_security_group_rule" "world_reply" {
+  security_group_id = aws_security_group.hello_world_web.id
+
+  type        = "egress"
+  from_port   = 0
+  to_port     = 0
+  protocol    = -1
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "world_http" {
+  security_group_id = aws_security_group.hello_world_web.id
+
+  type        = "ingress"
+  from_port   = 80
+  to_port     = 80
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "home_ssh" {
+  security_group_id = aws_security_group.hello_world_web.id
+
+  type        = "ingress"
+  from_port   = 22
+  to_port     = 22
+  protocol    = "tcp"
+  cidr_blocks = ["108.46.251.154/32"]
+}
+
+resource "aws_instance" "hello_world_web" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "t3.micro"
 
-  key_name = aws_key_pair.web_key.key_name
+  key_name               = aws_key_pair.web_key.key_name
+  vpc_security_group_ids = [aws_security_group.hello_world_web.id]
+
+  tags = {
+    Name = "hello-world-web"
+  }
 }
