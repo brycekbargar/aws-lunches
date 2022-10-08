@@ -1,0 +1,7 @@
+---
+- name: Web Server
+  hosts: terraform
+
+  tasks:
+    - name: Check Connectivity
+      ansible.builtin.ping:

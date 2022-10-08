@@ -1,3 +1,5 @@
+*.pem
+playbooks/terraform.yaml
 
 ### Ansible ###
 *.retry
