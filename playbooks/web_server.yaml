@@ -3,5 +3,30 @@
   hosts: terraform
 
   tasks:
-    - name: Check Connectivity
-      ansible.builtin.ping:
+    - name: Update Packages
+      become: true
+      ansible.builtin.apt:
+        update_cache: true
+        name: "*"
+        state: latest
+
+    - name: Install Apache2
+      become: true
+      ansible.builtin.apt:
+        name: apache2
+        state: latest
+
+    - name: Remove default site content
+      become: true
+      ansible.builtin.file:
+        path: /var/www/html/index.html
+        state: absent
+
+    - name: Replace default site content
+      become: true
+      ansible.builtin.copy:
+        content: |
+          <h1>Welcome!</h1>
+          We hope you <i>really</i> enjoy your stay here.
+        dest: /var/www/html/index.html
+        mode: "0644"
