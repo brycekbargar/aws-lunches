@@ -10,11 +10,47 @@
         name: "*"
         state: latest
 
-    - name: Install Apache2
+    - name: Install Lamp
       become: true
       ansible.builtin.apt:
-        name: apache2
+        name:
+          - apache2
+          - mysql-server
+          - python3-pymysql
+          - php
+          - php-mysql
+          - libapache2-mod-php
         state: latest
+
+    - name: Mysql root setup
+      block:
+        - name: Test root password access
+          community.mysql.mysql_info:
+            login_user: root
+            login_password: "{{ mysql_root_password }}"
+      rescue:
+        - name: Set the Mysql root password
+          become: true
+          community.mysql.mysql_user:
+            login_unix_socket: /var/run/mysqld/mysqld.sock
+            name: root
+            password: "{{ mysql_root_password }}"
+
+    - name: Create the wordpress database
+      community.mysql.mysql_db:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        name: wordpress
+        state: present
+
+    - name: Create a wordpress service user
+      community.mysql.mysql_user:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        name: svc-wordpress
+        password: "{{ wordpress_db_password }}"
+        priv: wordpress.*:ALL
+        state: present
 
     - name: Remove default site content
       become: true
@@ -22,11 +58,37 @@
         path: /var/www/html/index.html
         state: absent
 
-    - name: Replace default site content
+    - name: Download and extract Wordpress
+      become: true
+      ansible.builtin.unarchive:
+        remote_src: true
+        src: https://wordpress.org/latest.tar.gz
+        dest: /var/www/html/
+        mode: 0755
+        extra_opts: [--strip-components=1]
+        creates: /var/www/html/wp-config-sample.php
+
+    - name: Creating Wordpress config
       become: true
       ansible.builtin.copy:
-        content: |
-          <h1>Welcome!</h1>
-          We hope you <i>really</i> enjoy your stay here.
-        dest: /var/www/html/index.html
-        mode: "0644"
+        remote_src: true
+        src: /var/www/html/wp-config-sample.php
+        dest: /var/www/html/wp-config.php
+        mode: 0644
+        force: false
+
+    - name: Configure Wordpress
+      become: true
+      ansible.builtin.replace:
+        path: /var/www/html/wp-config.php
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace }}"
+      with_items:
+        - regexp: username_here
+          replace: svc-wordpress
+        - regexp: password_here
+          replace: "{{ wordpress_db_password }}"
+        - regexp: database_name_here
+          replace: wordpress
+      loop_control:
+        label: "{{ item.regexp }}"
