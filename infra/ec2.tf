@@ -44,7 +44,7 @@ resource "aws_security_group_rule" "home_ssh" {
   from_port   = 22
   to_port     = 22
   protocol    = "tcp"
-  cidr_blocks = ["108.46.251.154/32"]
+  cidr_blocks = var.home_cidr_block
 }
 
 resource "aws_instance" "hello_world_web" {
