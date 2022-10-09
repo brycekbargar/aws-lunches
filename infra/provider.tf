@@ -27,7 +27,7 @@ provider "aws" {
     tags = {
       terraform = "true"
       source    = "aws-lunches"
-      chapter   = "three"
+      chapter   = "four"
     }
   }
 }

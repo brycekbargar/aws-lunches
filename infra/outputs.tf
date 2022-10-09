@@ -6,5 +6,5 @@ output "web_private_key" {
 
 output "web_public_dns" {
   description = "Public DNS name assigned to web server."
-  value       = aws_instance.hello_world_web.public_dns
+  value       = aws_instance.web.public_dns
 }

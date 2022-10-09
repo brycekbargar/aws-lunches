@@ -14,11 +14,11 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
-resource "aws_security_group" "hello_world_web" {
+resource "aws_security_group" "web" {
 }
 
 resource "aws_security_group_rule" "world_reply" {
-  security_group_id = aws_security_group.hello_world_web.id
+  security_group_id = aws_security_group.web.id
 
   type        = "egress"
   from_port   = 0
@@ -28,7 +28,7 @@ resource "aws_security_group_rule" "world_reply" {
 }
 
 resource "aws_security_group_rule" "world_http" {
-  security_group_id = aws_security_group.hello_world_web.id
+  security_group_id = aws_security_group.web.id
 
   type        = "ingress"
   from_port   = 80
@@ -38,7 +38,7 @@ resource "aws_security_group_rule" "world_http" {
 }
 
 resource "aws_security_group_rule" "home_ssh" {
-  security_group_id = aws_security_group.hello_world_web.id
+  security_group_id = aws_security_group.web.id
 
   type        = "ingress"
   from_port   = 22
@@ -47,12 +47,12 @@ resource "aws_security_group_rule" "home_ssh" {
   cidr_blocks = var.home_cidr_block
 }
 
-resource "aws_instance" "hello_world_web" {
+resource "aws_instance" "web" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "t3.micro"
 
   key_name               = aws_key_pair.web_key.key_name
-  vpc_security_group_ids = [aws_security_group.hello_world_web.id]
+  vpc_security_group_ids = [aws_security_group.web.id]
 
   tags = {
     Name = "hello-world-web"
