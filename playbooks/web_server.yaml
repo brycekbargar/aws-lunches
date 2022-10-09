@@ -10,47 +10,15 @@
         name: "*"
         state: latest
 
-    - name: Install Lamp
+    - name: Install La_p
       become: true
       ansible.builtin.apt:
         name:
           - apache2
-          - mysql-server
-          - python3-pymysql
           - php
           - php-mysql
           - libapache2-mod-php
         state: latest
-
-    - name: Mysql root setup
-      block:
-        - name: Test root password access
-          community.mysql.mysql_info:
-            login_user: root
-            login_password: "{{ mysql_root_password }}"
-      rescue:
-        - name: Set the Mysql root password
-          become: true
-          community.mysql.mysql_user:
-            login_unix_socket: /var/run/mysqld/mysqld.sock
-            name: root
-            password: "{{ mysql_root_password }}"
-
-    - name: Create the wordpress database
-      community.mysql.mysql_db:
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-        name: wordpress
-        state: present
-
-    - name: Create a wordpress service user
-      community.mysql.mysql_user:
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-        name: svc-wordpress
-        password: "{{ wordpress_db_password }}"
-        priv: wordpress.*:ALL
-        state: present
 
     - name: Remove default site content
       become: true
@@ -65,8 +33,8 @@
         src: https://wordpress.org/latest.tar.gz
         dest: /var/www/html/
         mode: 0755
-        extra_opts: [--strip-components=1]
-        creates: /var/www/html/wp-config-sample.php
+        extra_opts:
+          - --strip-components=1
 
     - name: Creating Wordpress config
       become: true
@@ -85,10 +53,12 @@
         replace: "{{ item.replace }}"
       with_items:
         - regexp: username_here
-          replace: svc-wordpress
+          replace: "{{ wordpress_db_username }}"
         - regexp: password_here
           replace: "{{ wordpress_db_password }}"
+        - regexp: localhost
+          replace: "{{ wordpress_db_host }}"
         - regexp: database_name_here
-          replace: wordpress
+          replace: "{{ wordpress_db_name }}"
       loop_control:
         label: "{{ item.regexp }}"
